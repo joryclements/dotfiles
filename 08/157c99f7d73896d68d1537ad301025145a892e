@@ -1,0 +1,23 @@
+install.sh
+  94a7847f5ac6d583 6-7,13-37,45-47,49-50,52-57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.4",
+  "base_commit_sha": "08157c99f7d73896d68d1537ad301025145a892e",
+  "prompts": {
+    "94a7847f5ac6d583": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "e805934a-6013-478f-9353-5b2b3c28aff3",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Jory Clements",
+      "messages": [],
+      "total_additions": 38,
+      "total_deletions": 15,
+      "accepted_lines": 38,
+      "overriden_lines": 0
+    }
+  }
+}
