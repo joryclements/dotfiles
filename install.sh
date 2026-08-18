@@ -3,9 +3,15 @@
 # Dotfiles install script. DevPod runs this on every `bin/dpod create` /
 # `rebuild`, after cloning this repo to $HOME/dotfiles inside the container.
 #
-# Purpose: make a chosen set of Claude Code plugins present in every DevPod.
-# Plugin state lives in ~/.claude/ on the per-workspace PVC, so it does not
-# carry to a new pod on its own — re-installing here is what makes it durable.
+# Purpose: make a chosen set of Claude Code plugins present AND active in every
+# DevPod. Plugin state lives in ~/.claude/ on the per-workspace PVC, so it does
+# not carry to a new pod on its own — re-installing here is what makes it
+# durable.
+#
+# Installing a plugin is not the same as switching it on. A plugin whose
+# behaviour is gated behind a flag file (i-have-adhd's always-on SessionStart
+# hook) stays dormant until that file exists, so ALWAYS_ON_FLAGS below is what
+# turns it on.
 #
 # Deliberately non-fatal throughout: a dotfiles failure must not stop a pod
 # from coming up.
@@ -17,6 +23,17 @@ set -uo pipefail
 PLUGINS=(
   "ayghri/i-have-adhd i-have-adhd@i-have-adhd"
 )
+
+# Flag files created under the Claude config dir. A plugin hook that gates on
+# its own flag file reads these; creating one is the opt-in.
+#   i-have-adhd: .i-have-adhd-always makes the SessionStart hook inject the
+#   ruleset from message one of every session, instead of waiting for the
+#   /i-have-adhd skill to be invoked by hand.
+ALWAYS_ON_FLAGS=(
+  ".i-have-adhd-always"
+)
+
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
 if ! command -v claude >/dev/null 2>&1; then
   echo "dotfiles: claude CLI not on PATH, skipping plugin install"
@@ -32,5 +49,63 @@ for entry in "${PLUGINS[@]}"; do
   echo "dotfiles: installing plugin $plugin"
   claude plugin install "$plugin" --scope user || true
 done
+
+mkdir -p "$CLAUDE_DIR"
+for flag in "${ALWAYS_ON_FLAGS[@]}"; do
+  echo "dotfiles: enabling always-on flag $flag"
+  touch "$CLAUDE_DIR/$flag" || true
+done
+
+# `claude plugin install` is expected to record enabledPlugins itself. Assert it
+# rather than trust it: an install that half-succeeds leaves a plugin present but
+# switched off, which looks identical to a working pod until a session starts
+# without the ruleset. Merge in place — never rewrite settings.json wholesale,
+# because the prebuild baseline's statusline, clipboard hook, and
+# betterup-engineering marketplace live in the same file (see README).
+python3 - "$CLAUDE_DIR/settings.json" "${PLUGINS[@]}" <<'PY' || true
+import json
+import os
+import sys
+import tempfile
+
+path, entries = sys.argv[1], sys.argv[2:]
+
+try:
+    with open(path) as f:
+        data = json.load(f)
+    if not isinstance(data, dict):
+        data = {}
+except (OSError, ValueError):
+    data = {}
+
+enabled = data.get("enabledPlugins")
+if not isinstance(enabled, dict):
+    enabled = {}
+
+changed = False
+for entry in entries:
+    plugin = entry.split()[1]
+    if enabled.get(plugin) is not True:
+        enabled[plugin] = True
+        changed = True
+        print(f"dotfiles: enabling {plugin} in settings.json")
+
+if not changed:
+    sys.exit(0)
+
+data["enabledPlugins"] = enabled
+
+# Atomic write: never leave settings.json truncated if interrupted, since
+# Claude Code may read it before this script re-runs.
+fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path) or ".", suffix=".tmp")
+try:
+    with os.fdopen(fd, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    os.replace(tmp, path)
+except BaseException:
+    os.unlink(tmp)
+    raise
+PY
 
 echo "dotfiles: done"
