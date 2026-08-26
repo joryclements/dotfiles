@@ -1,0 +1,89 @@
+{
+  "version": 3,
+  "lines": [
+    [
+      {
+        "id": "1",
+        "type": "model",
+        "color": "yellow"
+      },
+      {
+        "id": "2",
+        "type": "separator"
+      },
+      {
+        "id": "ac909e5c-f3a1-47a8-8831-70ec397a8c42",
+        "type": "tokens-total",
+        "color": "brightBlack"
+      },
+      {
+        "id": "4",
+        "type": "separator"
+      },
+      {
+        "id": "5",
+        "type": "git-branch",
+        "color": "brightCyan"
+      },
+      {
+        "id": "6",
+        "type": "separator"
+      },
+      {
+        "id": "7",
+        "type": "git-changes",
+        "color": "brightBlack"
+      }
+    ],
+    [
+      {
+        "id": "f024332f-770c-4006-92c2-df6bf1af57d6",
+        "type": "session-cost"
+      },
+      {
+        "id": "e1d75ba3-3133-4bf2-949c-5a596a2a49ad",
+        "type": "separator"
+      },
+      {
+        "id": "1f947660-4baf-4259-8c96-a464612555e7",
+        "type": "session-usage"
+      },
+      {
+        "id": "5b87c272-0992-4f94-bb0e-f852ed7d5a59",
+        "type": "separator"
+      },
+      {
+        "id": "b460178b-7267-4d53-813f-e9876935be5c",
+        "type": "weekly-usage"
+      }
+    ],
+    [
+      {
+        "id": "9ddcd81f-f74b-42df-8e79-e06a387fbd46",
+        "type": "context-bar",
+        "color": "brightBlack"
+      }
+    ]
+  ],
+  "flexMode": "full-minus-40",
+  "compactThreshold": 60,
+  "colorLevel": 2,
+  "defaultPaddingSide": "both",
+  "inheritSeparatorColors": false,
+  "globalBold": false,
+  "gitCacheTtlSeconds": 5,
+  "minimalistMode": false,
+  "powerline": {
+    "enabled": false,
+    "separators": [
+      ""
+    ],
+    "separatorInvertBackground": [
+      false
+    ],
+    "startCaps": [],
+    "endCaps": [],
+    "autoAlign": false,
+    "continueThemeAcrossLines": false
+  }
+}
