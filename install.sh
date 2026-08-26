@@ -50,6 +50,16 @@ for entry in "${PLUGINS[@]}"; do
   claude plugin install "$plugin" --scope user || true
 done
 
+# ccstatusline widget config — the statusLine command merged into settings.json
+# below reads this, so copying it keeps pods rendering the same line as local.
+# Clobber on purpose: this repo is the source of truth for pod appearance.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -f "$SCRIPT_DIR/ccstatusline/settings.json" ]; then
+  mkdir -p "$HOME/.config/ccstatusline"
+  cp "$SCRIPT_DIR/ccstatusline/settings.json" "$HOME/.config/ccstatusline/settings.json" || true
+  echo "dotfiles: installed ccstatusline config"
+fi
+
 mkdir -p "$CLAUDE_DIR"
 for flag in "${ALWAYS_ON_FLAGS[@]}"; do
   echo "dotfiles: enabling always-on flag $flag"
@@ -89,6 +99,14 @@ for entry in entries:
         enabled[plugin] = True
         changed = True
         print(f"dotfiles: enabling {plugin} in settings.json")
+
+# ccstatusline (github.com/sirmalloc/ccstatusline) replaces the prebuild
+# baseline's dpod statusline. npx caches the package after the first render.
+statusline = {"type": "command", "command": "npx -y ccstatusline@latest"}
+if data.get("statusLine") != statusline:
+    data["statusLine"] = statusline
+    changed = True
+    print("dotfiles: setting statusLine to ccstatusline in settings.json")
 
 if not changed:
     sys.exit(0)
