@@ -1,0 +1,7 @@
+# Drag-select copy inside a devpod: dpod-tmux-autostart.sh execs herdr on login,
+# and its guard tests HERDR_ENV, which ssh does not forward. An ssh from a herdr
+# pane therefore lands in a nested herdr, where the pod's herdr takes the mouse
+# and its OSC 52 copy has to cross two terminals. Releasing the mouse here hands
+# selection back to the outer terminal.
+[ui]
+mouse_capture = false
