@@ -60,6 +60,16 @@ if [ -f "$SCRIPT_DIR/ccstatusline/settings.json" ]; then
   echo "dotfiles: installed ccstatusline config"
 fi
 
+# herdr config — the image seeds none, so without this every pod defaults to
+# mouse_capture = true and drag-select stops copying out of nested herdr panes.
+# Seed only when absent, unlike the clobbering copy above: a fresh pod has no
+# config, while a laptop running this has a hand-tuned one worth keeping.
+if [ -f "$SCRIPT_DIR/herdr/config.toml" ] && [ ! -e "$HOME/.config/herdr/config.toml" ]; then
+  mkdir -p "$HOME/.config/herdr"
+  cp "$SCRIPT_DIR/herdr/config.toml" "$HOME/.config/herdr/config.toml" || true
+  echo "dotfiles: installed herdr config"
+fi
+
 mkdir -p "$CLAUDE_DIR"
 for flag in "${ALWAYS_ON_FLAGS[@]}"; do
   echo "dotfiles: enabling always-on flag $flag"
