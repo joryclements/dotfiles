@@ -1,18 +1,38 @@
 # dotfiles
 
-Personal DevPod dotfiles. DevPod clones this repo to `$HOME/dotfiles` inside every
-workspace and runs `install.sh` during container setup.
+Personal DevPod dotfiles. Keeps your Claude Code plugins, configs, and helper
+scripts present in every DevPod. DevPod clones this repo to `$HOME/dotfiles` and
+runs `install.sh` on every `bin/dpod create` / `rebuild`.
+
+**Turn it on** — per machine you launch pods from (it's a DevPod *context* option,
+not synced between your laptop and a pod):
+
+```bash
+bin/dpod options set DOTFILES_URL=https://github.com/joryclements/dotfiles
+bin/dpod options list   # confirm
+```
+
+Takes effect on the next `bin/dpod create` / `rebuild`. Verify in a fresh pod with
+`claude plugin list`.
 
 ## What it does
 
-Installs a chosen set of Claude Code plugins into every DevPod, and switches on
-the ones whose behaviour is gated behind a flag file.
+- **Claude Code plugins** — installs a chosen set, and switches on the ones gated
+  behind a flag file.
+- **herdr config** — seeds `mouse_capture` so drag-select copy works in nested
+  herdr panes.
+- **herdr-plugins helper** — a small CLI on your `PATH` to check and update your
+  installed herdr plugins.
+
+<details>
+<summary><strong>How this survives across pods</strong></summary>
 
 Plugin state (`~/.claude/settings.json`, `~/.claude/plugins/`) lives on the
 per-workspace PVC. It survives `bin/dpod stop` / `ssh` on the same pod, but a new
 workspace starts from the prebuild image baseline — which knows only the
 `betterup-engineering` marketplace. Re-installing on every create is what makes a
 personal plugin durable across pods.
+</details>
 
 ## Adding a plugin
 
@@ -42,32 +62,17 @@ ALWAYS_ON_FLAGS=(
 ```
 
 Each entry is `touch`ed under `$CLAUDE_CONFIG_DIR` (default `~/.claude`).
-`.i-have-adhd-always` makes i-have-adhd's hook inject its ruleset from message
-one of every session, rather than waiting for `/i-have-adhd` to be invoked by
-hand.
+`.i-have-adhd-always` makes i-have-adhd's hook inject its ruleset from message one
+of every session, rather than waiting for `/i-have-adhd` to be invoked by hand.
 
-To go back to on-demand for a plugin, drop its entry here and delete the file in
-any pod that already has it.
-
-## Enabling it
-
-Per machine you launch pods from — this is a DevPod *context* option, so it is not
-synced between your laptop and a pod:
-
-```bash
-bin/dpod options set DOTFILES_URL=https://github.com/joryclements/dotfiles
-bin/dpod options list   # confirm
-```
-
-Takes effect on the next `bin/dpod create` / `rebuild`. Verify in a fresh pod with
-`claude plugin list`.
+To go back to on-demand, drop the entry here and delete the file in any pod that
+already has it.
 
 ## herdr-plugins helper
 
-`bin/herdr-plugins` is installed onto `PATH` (`~/.local/bin`). It lists the GitHub
-herdr plugins you have installed and tells you which are behind, then updates them
-on request — herdr v1 has no `plugin update`, so it wraps the standard
-`herdr plugin install --ref`:
+`bin/herdr-plugins` (installed onto `~/.local/bin`) checks and updates the GitHub
+herdr plugins you have installed. herdr v1 has no `plugin update`, so it wraps the
+standard `herdr plugin install --ref`:
 
 ```bash
 herdr-plugins                   # status: installed vs latest, per plugin
@@ -75,12 +80,17 @@ herdr-plugins update mirror     # or `all`; reinstalls at the newest release tag
 herdr-plugins restart-mirrors   # reload the mirror binary into running streamers
 ```
 
-"Latest" is the newest release tag, or the default-branch tip for repos with no
-releases. `update` restarts the mirror streamers for you when the `mirror` plugin
+<details>
+<summary><strong>What "latest" means, and what it touches</strong></summary>
+
+"Latest" is the newest GitHub release tag, or the default-branch tip for repos with
+no releases. `update` restarts the mirror streamers for you when the `mirror` plugin
 changes. It only touches herdr plugins you installed yourself, never pod images or
 team tooling, so on a pod with none it reports nothing.
+</details>
 
-## Design notes
+<details>
+<summary><strong>Design notes</strong></summary>
 
 - **Never symlink `.claude/settings.json` into `$HOME`.** The BetterUp prebuild
   image baseline carries the dpod statusline, the clipboard `UserPromptSubmit`
@@ -97,10 +107,13 @@ team tooling, so on a pod with none it reports nothing.
   idempotently.
 - **Everything is non-fatal** (`|| true`, `set -uo pipefail` without `-e`). A
   dotfiles failure must not block a pod from starting.
+</details>
 
-## Supply chain
+<details>
+<summary><strong>Supply chain</strong></summary>
 
 Each plugin listed here injects instruction content into every Claude Code session
 in every pod, pulled from a repo you may not control (the monolith sets
 `FORCE_AUTOUPDATE_PLUGINS=1`). For anything you want pinned rather than
 auto-updating, fork it and point the marketplace source at the fork.
+</details>
