@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# herdr-plugins — see and update your installed GitHub herdr plugins.
+#
+# herdr v1 has no `plugin update`; refreshing a plugin means reinstalling it at a
+# newer ref. This is a thin wrapper over the standard `herdr plugin install`, so
+# it does nothing you couldn't type by hand — it just checks all of them at once,
+# and restarts the mirror streamers for you when the mirror plugin changes.
+#
+#   herdr-plugins                     # status: installed vs latest, per plugin
+#   herdr-plugins update <id>|all     # reinstall outdated; restart mirror if it changed
+#   herdr-plugins restart-mirrors     # reload the mirror binary into running streamers
+#
+# "latest" is the newest GitHub release tag, or the default-branch tip when a repo
+# publishes no releases. It only touches your local herdr plugins, never pod
+# images or team tooling.
+set -euo pipefail
+
+_plugins() {  # id  owner  repo  installed_short_commit
+  herdr plugin list --json | python3 -c '
+import sys, json
+for p in json.load(sys.stdin)["result"]["plugins"]:
+    s = p.get("source", {})
+    if s.get("kind") == "github":
+        print(p["plugin_id"], s["owner"], s["repo"], (s.get("resolved_commit") or "")[:12])
+'
+}
+
+_latest() {  # owner repo -> "<ref>\t<short_commit>"  (ref = release tag, else default branch)
+  local owner=$1 repo=$2 tag commit br
+  tag=$(gh release view --repo "$owner/$repo" --json tagName --jq .tagName 2>/dev/null || true)
+  if [ -n "$tag" ]; then
+    commit=$(gh api "repos/$owner/$repo/commits/$tag" --jq '.sha[0:12]' 2>/dev/null || true)
+    printf '%s\t%s\n' "$tag" "$commit"
+  else
+    br=$(gh repo view "$owner/$repo" --json defaultBranchRef --jq .defaultBranchRef.name)
+    commit=$(gh api "repos/$owner/$repo/commits/$br" --jq '.sha[0:12]')
+    printf '%s@%s\t%s\n' "$br" "$commit" "$commit"
+  fi
+}
+
+_status() {
+  printf '%-20s %-13s %-16s %s\n' PLUGIN INSTALLED LATEST STATUS
+  while read -r id owner repo inst; do
+    IFS=$'\t' read -r ref commit < <(_latest "$owner" "$repo")
+    local st=ok; [ "$inst" != "$commit" ] && st=OUTDATED
+    printf '%-20s %-13s %-16s %s\n' "$id" "$inst" "$ref" "$st"
+  done < <(_plugins)
+}
+
+# The running streamers hold the old binary in memory; a reinstall only replaces
+# the file. Kill them and let the daemon re-spawn on the new binary. `restore`
+# can lose to the daemon's own tombstone write, so retry until every host streams.
+_restart_mirrors() {
+  local hosts n running tries=0
+  hosts=$(herdr-mirror status 2>/dev/null | sed -n 's/^host \([^ ]*\) .*/\1/p')
+  n=$(printf '%s\n' $hosts | grep -c . || true)
+  [ "$n" -eq 0 ] && { echo "no mirror hosts configured"; return 0; }
+  echo "restarting $n mirror streamer(s) to load the new binary..."
+  pkill -f 'herdr-mirror pane ' 2>/dev/null || true
+  sleep 3
+  while :; do
+    running=$(pgrep -f 'herdr-mirror pane ' | wc -l | tr -d ' ')
+    [ "$running" -ge "$n" ] && break
+    [ "$tries" -ge 12 ] && break
+    for h in $hosts; do herdr-mirror restore "$h" w1 >/dev/null 2>&1 || true; done
+    sleep 3; tries=$((tries + 1))
+  done
+  echo "streamers running: $(pgrep -f 'herdr-mirror pane ' | wc -l | tr -d ' ')/$n"
+  herdr-mirror status 2>/dev/null | grep -E '^host ' || true
+}
+
+_update() {
+  local want=${1:-all} did_mirror=0
+  while read -r id owner repo inst; do
+    [ "$want" != all ] && [ "$want" != "$id" ] && continue
+    IFS=$'\t' read -r ref commit < <(_latest "$owner" "$repo")
+    if [ "$inst" = "$commit" ]; then echo "$id: already at $ref"; continue; fi
+    echo "$id: $inst -> $ref"
+    herdr plugin install "$owner/$repo" --ref "${ref%@*}" --yes
+    [ "$id" = mirror ] && did_mirror=1
+  done < <(_plugins)
+  [ "$did_mirror" = 1 ] && { echo; _restart_mirrors; }
+}
+
+case "${1:-status}" in
+  status|"")       _status ;;
+  update)          _update "${2:-all}" ;;
+  restart-mirrors) _restart_mirrors ;;
+  *) echo "usage: herdr-plugins [status | update <id>|all | restart-mirrors]" >&2; exit 2 ;;
+esac

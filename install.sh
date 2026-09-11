@@ -70,6 +70,19 @@ if [ -f "$SCRIPT_DIR/herdr/config.toml" ] && [ ! -e "$HOME/.config/herdr/config.
   echo "dotfiles: installed herdr config"
 fi
 
+# herdr-plugins helper — a small CLI to see and update the GitHub herdr plugins
+# you have installed (herdr v1 has no `plugin update`; it wraps the standard
+# `herdr plugin install --ref`), and to reload the mirror binary into running
+# streamers after an update. Clobber-copy onto PATH: this repo is the source of
+# truth for it. It only ever acts on herdr plugins you installed yourself, so on
+# a pod that has none it simply reports nothing.
+if [ -f "$SCRIPT_DIR/bin/herdr-plugins" ]; then
+  mkdir -p "$HOME/.local/bin"
+  cp "$SCRIPT_DIR/bin/herdr-plugins" "$HOME/.local/bin/herdr-plugins" || true
+  chmod +x "$HOME/.local/bin/herdr-plugins" || true
+  echo "dotfiles: installed herdr-plugins helper"
+fi
+
 mkdir -p "$CLAUDE_DIR"
 for flag in "${ALWAYS_ON_FLAGS[@]}"; do
   echo "dotfiles: enabling always-on flag $flag"

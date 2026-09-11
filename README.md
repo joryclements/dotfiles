@@ -62,6 +62,24 @@ bin/dpod options list   # confirm
 Takes effect on the next `bin/dpod create` / `rebuild`. Verify in a fresh pod with
 `claude plugin list`.
 
+## herdr-plugins helper
+
+`bin/herdr-plugins` is installed onto `PATH` (`~/.local/bin`). It lists the GitHub
+herdr plugins you have installed and tells you which are behind, then updates them
+on request — herdr v1 has no `plugin update`, so it wraps the standard
+`herdr plugin install --ref`:
+
+```bash
+herdr-plugins                   # status: installed vs latest, per plugin
+herdr-plugins update mirror     # or `all`; reinstalls at the newest release tag
+herdr-plugins restart-mirrors   # reload the mirror binary into running streamers
+```
+
+"Latest" is the newest release tag, or the default-branch tip for repos with no
+releases. `update` restarts the mirror streamers for you when the `mirror` plugin
+changes. It only touches herdr plugins you installed yourself, never pod images or
+team tooling, so on a pod with none it reports nothing.
+
 ## Design notes
 
 - **Never symlink `.claude/settings.json` into `$HOME`.** The BetterUp prebuild
