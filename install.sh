@@ -122,7 +122,12 @@ if command -v gh >/dev/null 2>&1; then
   else
     echo "dotfiles: could not clone $PRIVATE_SKILLS_REPO (no auth or no access), skipping personal skills"
   fi
-  rm -r "$SKILLS_TMP" 2>/dev/null || true
+  # -f is required, not cosmetic: git writes objects under .git/objects/ read-only,
+  # and `rm -r` alone prompts before deleting a write-protected file. With stderr
+  # sent to /dev/null the prompt is invisible, so the script blocks forever on a
+  # question nobody can see. It only bites when stdin is a TTY, which is why a
+  # DevPod-run install is fine and a hand-run `./install.sh` hangs.
+  rm -rf "$SKILLS_TMP" || true
 fi
 
 mkdir -p "$CLAUDE_DIR"
