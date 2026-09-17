@@ -33,6 +33,10 @@ ALWAYS_ON_FLAGS=(
   ".i-have-adhd-always"
 )
 
+# Private companion repo holding personal skills whose content can't be public.
+# See the skills block below for why the split exists.
+PRIVATE_SKILLS_REPO="joryclements/claude-skills"
+
 CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
 if ! command -v claude >/dev/null 2>&1; then
@@ -81,6 +85,44 @@ if [ -f "$SCRIPT_DIR/bin/herdr-plugins" ]; then
   cp "$SCRIPT_DIR/bin/herdr-plugins" "$HOME/.local/bin/herdr-plugins" || true
   chmod +x "$HOME/.local/bin/herdr-plugins" || true
   echo "dotfiles: installed herdr-plugins helper"
+fi
+
+# Personal skills from the private companion repo. They carry real content -
+# verbatim quotes, account names, internal schema - so they cannot live in this
+# repo, which is public by necessity (DevPod's agent clones it before in-pod
+# GitHub auth is guaranteed). This script runs later, after on-create has run
+# `gh auth setup-git`, so by here `gh` is usable and the private clone works.
+# Non-fatal like everything else: no auth, no network, or no access just means a
+# pod without these skills, never a pod that fails to start.
+if command -v gh >/dev/null 2>&1; then
+  SKILLS_TMP="$(mktemp -d)"
+  if gh repo clone "$PRIVATE_SKILLS_REPO" "$SKILLS_TMP/repo" -- --depth 1 --quiet 2>/dev/null; then
+    if [ -d "$SKILLS_TMP/repo/skills" ]; then
+      mkdir -p "$CLAUDE_DIR/skills"
+      # Sync per skill, never the whole skills dir: it also holds symlinks to
+      # locally-installed skills (git-ai, herdr) that this repo knows nothing
+      # about and must not disturb. --delete is scoped to one skill dir so a
+      # file dropped upstream disappears here too. --checksum because the
+      # default size+mtime quick check silently skips a same-size edit, which
+      # is a realistic way to revise prose; these files are tiny so hashing
+      # them costs nothing. cp is the fallback when rsync is absent.
+      for skill in "$SKILLS_TMP/repo/skills"/*/; do
+        [ -d "$skill" ] || continue
+        name="$(basename "$skill")"
+        dest="$CLAUDE_DIR/skills/$name"
+        mkdir -p "$dest"
+        if command -v rsync >/dev/null 2>&1; then
+          rsync -a --checksum --delete "$skill" "$dest/" || true
+        else
+          cp -R "$skill." "$dest/" || true
+        fi
+        echo "dotfiles: installed skill $name"
+      done
+    fi
+  else
+    echo "dotfiles: could not clone $PRIVATE_SKILLS_REPO (no auth or no access), skipping personal skills"
+  fi
+  rm -r "$SKILLS_TMP" 2>/dev/null || true
 fi
 
 mkdir -p "$CLAUDE_DIR"

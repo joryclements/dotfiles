@@ -23,6 +23,9 @@ Takes effect on the next `bin/dpod create` / `rebuild`. Verify in a fresh pod wi
   herdr panes.
 - **herdr-plugins helper** — a small CLI on your `PATH` to check and update your
   installed herdr plugins.
+- **Personal skills** — copies the skills from a *private* companion repo into
+  `~/.claude/skills/`, so skills whose content can't be public still reach every
+  pod.
 
 <details>
 <summary><strong>How this survives across pods</strong></summary>
@@ -48,6 +51,42 @@ PLUGINS=(
 `<marketplace-source>` is whatever `claude plugin marketplace add` accepts —
 `owner/repo`, a URL, or a path. `<plugin>@<marketplace>` comes from the source
 repo's `.claude-plugin/marketplace.json` (`plugins[].name` @ top-level `name`).
+
+## Personal skills (private companion repo)
+
+Skills that carry real content — verbatim quotes, account names, internal schema,
+real figures — live in **[joryclements/claude-skills](https://github.com/joryclements/claude-skills)**,
+which is private. This repo carries only the mechanism to fetch them:
+
+```bash
+PRIVATE_SKILLS_REPO="joryclements/claude-skills"
+```
+
+Each `skills/<name>/` directory there is synced to `$CLAUDE_CONFIG_DIR/skills/<name>`.
+
+<details>
+<summary><strong>Why two repos, and why this one can't just be private</strong></summary>
+
+This repo has to stay public: DevPod's agent clones it early in container setup,
+possibly before in-pod GitHub auth is configured, so a private clone can fail on
+credentials.
+
+`install.sh` is different. It runs *after* on-create has already run
+`gh auth setup-git` — see the comment in `bin/utils/devcontainer/post-attach` in
+the monolith, which re-asserts that helper precisely because dotfiles are
+installed after it. `gh` is backed by the forwarded `GH_TOKEN` and needs no
+credentials tunnel, so by the time this script runs it can clone a private repo
+even though the agent that cloned *this* repo could not.
+
+So the split is: public repo carries the mechanism, private repo carries the
+content. Nothing sensitive is ever committed here.
+
+The fetch is non-fatal like everything else. No `gh`, no auth, no network, or no
+access to the private repo means a pod without those skills — never a pod that
+fails to start. The sync is also per-skill rather than over the whole directory,
+because `~/.claude/skills/` holds symlinks to locally-installed skills that this
+repo knows nothing about.
+</details>
 
 ## Always-on flags
 
