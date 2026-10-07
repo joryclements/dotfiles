@@ -64,6 +64,15 @@ if [ -f "$SCRIPT_DIR/ccstatusline/settings.json" ]; then
   echo "dotfiles: installed ccstatusline config"
 fi
 
+# ~/.zshenv — puts mise's shims (npm, npx, yarn) on PATH for every zsh, so the
+# ccstatusline command below and npx-based MCP servers can start from a pod SSH
+# shell; the image only exposes them through Docker ENV, which SSH never sees.
+# Seed only when absent: a pod has no ~/.zshenv, a laptop may have its own.
+if [ -f "$SCRIPT_DIR/zsh/zshenv" ] && [ ! -e "$HOME/.zshenv" ]; then
+  cp "$SCRIPT_DIR/zsh/zshenv" "$HOME/.zshenv" || true
+  echo "dotfiles: installed ~/.zshenv (mise shims on PATH)"
+fi
+
 # herdr config — the image seeds none, so without this every pod defaults to
 # mouse_capture = true and drag-select stops copying out of nested herdr panes.
 # Seed only when absent, unlike the clobbering copy above: a fresh pod has no

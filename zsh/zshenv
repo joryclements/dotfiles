@@ -1,0 +1,9 @@
+# Installed to ~/.zshenv by dotfiles/install.sh.
+#
+# .zshenv runs for every zsh, interactive or not, so anything launched from a
+# pod shell (Claude Code, its statusLine command, npx-based MCP servers) sees
+# the same PATH. The DevPod image puts mise's shims on PATH only through Docker
+# ENV, which SSH logins never inherit; only `node` is symlinked into
+# /usr/local/bin, so npm/npx/yarn are unreachable without this. The guard makes
+# it a no-op on a laptop that has no mise shims dir.
+[ -d "$HOME/.local/share/mise/shims" ] && export PATH="$HOME/.local/share/mise/shims:$PATH"
