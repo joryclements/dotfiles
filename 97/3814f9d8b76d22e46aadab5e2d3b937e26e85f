@@ -1,0 +1,19 @@
+herdr/config.toml
+  s_09917d1d453397::t_fbdd5364d8771b 8-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "973814f9d8b76d22e46aadab5e2d3b937e26e85f",
+  "prompts": {},
+  "sessions": {
+    "s_09917d1d453397": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f035f1f7-c78b-4715-9d92-22fb678e9266",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Jory Clements <jory.clements@betterup.co>"
+    }
+  }
+}
