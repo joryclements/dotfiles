@@ -5,3 +5,9 @@
 # selection back to the outer terminal.
 [ui]
 mouse_capture = false
+
+# Pane shells: the pod starts the herdr server from supervisord with no SHELL in
+# its environment, so new panes fall back to /bin/sh and ~/.zshenv (mise shims
+# on PATH for npx tools) never loads. Name zsh explicitly.
+[terminal]
+default_shell = "/usr/bin/zsh"
