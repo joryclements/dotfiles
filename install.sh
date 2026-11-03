@@ -22,6 +22,7 @@ set -uo pipefail
 # (owner/repo, URL, or path).
 PLUGINS=(
   "ayghri/i-have-adhd i-have-adhd@i-have-adhd"
+  "betterup/betterup-claude-code-toolkit jane-code@betterup-engineering"
 )
 
 # Flag files created under the Claude config dir. A plugin hook that gates on
