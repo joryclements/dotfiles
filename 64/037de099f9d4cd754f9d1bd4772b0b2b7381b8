@@ -1,0 +1,23 @@
+README.md
+  s_d63a961fb1f846::t_af09a09424e451 24-25
+install.sh
+  s_d63a961fb1f846::t_d8559663327f79 77-86
+zsh/zshenv
+  s_d63a961fb1f846::t_f6086b578cafbb 10-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "64037de099f9d4cd754f9d1bd4772b0b2b7381b8",
+  "prompts": {},
+  "sessions": {
+    "s_d63a961fb1f846": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "29e0e366-d8b7-4433-81fc-5efefea34901",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jory Clements <jory.clements@betterup.co>"
+    }
+  }
+}
