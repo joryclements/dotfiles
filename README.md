@@ -21,6 +21,8 @@ Takes effect on the next `bin/dpod create` / `rebuild`. Verify in a fresh pod wi
   behind a flag file.
 - **herdr config** — seeds `mouse_capture` so drag-select copy works in nested
   herdr panes.
+- **Herdr desktop app** — terminals the app opens on a pod (through herdr-core)
+  start as a plain shell, not a nested herdr. SSH logins still start herdr.
 - **herdr-plugins helper** — a small CLI on your `PATH` to check and update your
   installed herdr plugins.
 - **Personal skills** — copies the skills from a *private* companion repo into

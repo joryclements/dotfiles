@@ -7,3 +7,10 @@
 # /usr/local/bin, so npm/npx/yarn are unreachable without this. The guard makes
 # it a no-op on a laptop that has no mise shims dir.
 [ -d "$HOME/.local/share/mise/shims" ] && export PATH="$HOME/.local/share/mise/shims:$PATH"
+
+# Herdr desktop app terminals (herdr-core, which sets HC_TERMINAL_ID) already keep
+# their sessions alive, so skip the pod's multiplexer autostart in them; otherwise
+# /etc/zsh/zshrc execs herdr and the app shows herdr inside herdr. Plain SSH
+# logins still get herdr. The autostart-script check keeps this a no-op on a
+# laptop, where exporting DPOD_MULTIPLEXER=none would leak into `bin/dpod create`.
+[ -n "${HC_TERMINAL_ID-}" ] && [ -r /usr/local/share/dpod-tmux-autostart.sh ] && export DPOD_MULTIPLEXER=none
