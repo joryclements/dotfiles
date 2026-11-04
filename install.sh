@@ -74,6 +74,16 @@ if [ -f "$SCRIPT_DIR/zsh/zshenv" ] && [ ! -e "$HOME/.zshenv" ]; then
   echo "dotfiles: installed ~/.zshenv (mise shims on PATH)"
 fi
 
+# Pods seeded before the herdr-core guard was added to zsh/zshenv keep their old
+# ~/.zshenv (it lives on the PVC), so append the guard when it is missing. Pods
+# only: the autostart script it turns off exists only in the DevPod image.
+HC_GUARD="$(grep -m1 '^\[ -n .*HC_TERMINAL_ID' "$SCRIPT_DIR/zsh/zshenv" 2>/dev/null || true)"
+if [ -n "$HC_GUARD" ] && [ -r /usr/local/share/dpod-tmux-autostart.sh ] \
+  && [ -f "$HOME/.zshenv" ] && ! grep -qF 'HC_TERMINAL_ID' "$HOME/.zshenv"; then
+  printf '\n%s\n' "$HC_GUARD" >> "$HOME/.zshenv" || true
+  echo "dotfiles: added the herdr-core guard to ~/.zshenv"
+fi
+
 # herdr config — the image seeds none, so without this every pod defaults to
 # mouse_capture = true and drag-select stops copying out of nested herdr panes.
 # Seed only when absent, unlike the clobbering copy above: a fresh pod has no
