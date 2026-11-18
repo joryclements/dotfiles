@@ -1,0 +1,19 @@
+ccstatusline/settings.json
+  s_b5cc175b41abc1::t_45f9f39db097c5 2,55-62,66-73,89-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "97075e268d5ced57ce061935bad6d04b9b202d99",
+  "prompts": {},
+  "sessions": {
+    "s_b5cc175b41abc1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3e05c414-231d-467d-8711-502a8013feb7",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Jory Clements <jory.clements@betterup.co>"
+    }
+  }
+}
