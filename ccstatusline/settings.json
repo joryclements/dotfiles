@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "lines": [
     [
       {
@@ -53,8 +53,24 @@
         "type": "separator"
       },
       {
+        "id": "d9db6e92-eb1c-4398-ab97-eac32f8fc9a4",
+        "type": "reset-timer"
+      },
+      {
+        "id": "5bd4061c-d07e-451e-98b5-5061e99c3d46",
+        "type": "separator"
+      },
+      {
         "id": "b460178b-7267-4d53-813f-e9876935be5c",
         "type": "weekly-usage"
+      },
+      {
+        "id": "4c55d569-54ff-41eb-8987-18479786eff6",
+        "type": "separator"
+      },
+      {
+        "id": "a00c4a02-12c9-4846-9a9e-3777cbd6adc8",
+        "type": "weekly-reset-timer"
       }
     ],
     [
@@ -65,13 +81,13 @@
       }
     ]
   ],
-  "flexMode": "full-minus-40",
-  "compactThreshold": 60,
   "colorLevel": 2,
   "defaultPaddingSide": "both",
   "inheritSeparatorColors": false,
   "globalBold": false,
   "gitCacheTtlSeconds": 5,
+  "terminalWidthCacheTtlSeconds": 5,
+  "customCommandCacheTtlSeconds": 0,
   "minimalistMode": false,
   "powerline": {
     "enabled": false,
